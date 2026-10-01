@@ -57,6 +57,16 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
 - A worktree is removed when its branch merges.
 - Never run a doubled-force clean (`git clean -ffd` or similar) in a main checkout; it deletes nested worktrees and child repos.
 
+## Code shared between projects
+
+- Code lives in one repo, and a repo belongs to one project. A project that uses another project's code references it and keeps no second copy.
+- Reference by the lightest means that works:
+  1. A link in `project.yaml`, when the project only needs to know where the code is.
+  2. When the project needs the files to build or run and is a monorepo by design, the code lives in the monorepo and the owning project links to it.
+  3. Otherwise a reference pinned to a commit or tag: a git submodule where the repo uses no worktrees, a pinned entry in the project's own catalog where it does.
+- A reference never points at a more private repo, and never at a branch.
+- A deliberate temporary copy, such as a shadow migration, records the commit it was taken from and which copy is authoritative.
+
 ## The profile
 
 One profile file per machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (kind and a URL pattern with `{key}`), and `memory` (kind and bank). See `profile.example.yaml`.
