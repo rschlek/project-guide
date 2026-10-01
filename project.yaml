@@ -2,6 +2,7 @@ project: project-guide
 title: Project Guide
 summary: A generic standard and plugin for laying out, naming, and describing projects, for anyone who keeps many repos and works with agents.
 scope: personal
+visibility: public
 repo_role: parent
 repos:
 tracking:

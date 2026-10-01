@@ -2,6 +2,13 @@
 
 Changes to the rules in `conventions.md`, newest first.
 
+## 2026-10-01
+
+- Every project now carries `docs/project-conventions.md`, a copy of these rules whose first line names the version it was copied from, and its `AGENTS.md` opens with a marked base block of the rules every session needs. Both are replaced whole when the standard updates and never edited locally; project-specific guidance goes below the block. In a repo someone else owns, the copy is excluded and a tracked `AGENTS.md` is left without the block (version 0.4.0).
+- A project's remote is private unless the user decides it is public. A public repo carries `visibility: public` in `project.yaml`, and its first public push follows a cleaning pass: nothing identifying in files or history, a commit identity the user wants published, and a license (version 0.4.0).
+- "Code shared between projects" names the one exception to never referencing a branch: a repo published as a plugin publishes on a `stable` branch that moves only by deliberate promotion from `main`, and a catalog may follow it (version 0.4.0).
+- Scope says whose the project is and where it is hosted, not who uses it; the summary says who it serves (version 0.4.0).
+
 ## 2026-09-30
 
 - Added "Repos shared with other people": in a shared repo the user leads, the standard files go in through review with only team-wide facts in `project.yaml`; in a repo someone else owns, they stay local in the exclude file. `project` now equals the repo name, so it holds for a repo adopted outside the projects root (version 0.3.0).
