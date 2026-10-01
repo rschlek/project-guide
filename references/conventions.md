@@ -23,7 +23,7 @@ There is no state file. Status lives in the tracker item (for tracked work), in 
 ## project.yaml
 
 Required:
-- `project`: the slug; equals the top-level folder name in the projects root.
+- `project`: the slug; equals the repo name.
 - `summary`: one sentence, what it is and who it is for.
 
 Optional:
@@ -66,6 +66,11 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
   3. Otherwise a reference pinned to a commit or tag: a git submodule where the repo uses no worktrees, a pinned entry in the project's own catalog where it does.
 - A reference never points at a more private repo, and never at a branch.
 - A deliberate temporary copy, such as a shadow migration, records the commit it was taken from and which copy is authoritative.
+
+## Repos shared with other people
+
+- In a shared repo the user leads, the standard files go in through the repo's normal review. Its `project.yaml` carries only what is true for everyone who uses the repo: no personal memory details and no machine paths.
+- In a repo someone else owns, the standard files stay local: listed in the local exclude file (`.git/info/exclude`), never committed or pushed.
 
 ## The profile
 
