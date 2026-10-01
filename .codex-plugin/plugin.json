@@ -1,6 +1,7 @@
 {
   "name": "project-guide",
-  "version": "0.3.0",
+  "version": "0.3.1",
+  "license": "MIT",
   "description": "A simple standard for laying out, naming, and describing projects, with skills to create a new project to it or bring an existing repository up to it.",
   "author": {
     "name": "Rainier",
