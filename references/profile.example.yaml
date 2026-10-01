@@ -7,12 +7,12 @@ worktrees_dir: .claude/worktrees   # where worktrees nest inside a project
 
 scopes:
   team:
-    meaning: serves the whole team
+    meaning: projects the team owns
     prefix: true                   # new project names start with "team-"
     host: git.example.com
     namespace: example-user
   lab:
-    meaning: experiments for one group
+    meaning: one group's experiments
     prefix: true
     host: git.example.com
     namespace: example-user

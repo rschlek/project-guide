@@ -9,14 +9,17 @@ The rules a project follows. Machine-specific values (the projects root, scopes,
 
 ## Files every project carries
 
-Every project has these four files, even if some are blank:
+Every project has these files, even if some are blank:
 
 - `README.md`: a human-readable summary, plus anything else a reader or agent needs.
-- `AGENTS.md`: project-specific agent guidance only.
+- `AGENTS.md`: agent guidance. It opens with the standard's base block, the few rules every session needs, between `project-guide:base` start and end markers. Project-specific guidance goes below the block.
 - `CLAUDE.md`: one line, `@AGENTS.md`.
 - `project.yaml`: all structured facts about the project.
+- `docs/project-conventions.md`: a copy of these rules, so an agent can read them without the plugin or a network. Its first line names the standard and the version it was copied from.
 
-Written material goes in `docs/` by convention. Nothing else is prescribed. Credentials and data extracts are never committed.
+The base block and the copy belong to the standard, not to the project: neither is edited locally, and when the standard updates each is replaced whole. Everything else in `AGENTS.md` is left as it is.
+
+Written material goes in `docs/` by convention. Beyond the copy above, nothing else is prescribed. Credentials and data extracts are never committed.
 
 There is no state file. Status lives in the tracker item (for tracked work), in the memory system (for the user's own sessions), and in git history.
 
@@ -28,7 +31,8 @@ Required:
 
 Optional:
 - `title`: a human-readable name.
-- `scope`: one of the profile's scopes, or `none`.
+- `scope`: one of the profile's scopes, or `none`. Scope says whose the project is and where it is hosted, not who uses it; the summary says who it serves.
+- `visibility`: only value `public`, present only on a public repo; absent means private. It lets an agent without network access tell that nothing identifying may be written in this repo.
 - `repo_role` and `repos`: multi-repo projects only. `repo_role` is `parent` or this repo's role; `repos` maps role to remote URL.
 - `tracking`: map of tracker system to item reference.
 - `memory`: tag, state model, instance, and bank, as applicable.
@@ -46,7 +50,8 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
 - The folder name equals the repo name.
 - New projects are named `<scope>-<subject>`, lowercase with hyphens. The scope comes from the profile's list; a scope marked as no prefix is left off.
 - Existing shared repos are not renamed just to conform.
-- Every project has a private remote from creation. The profile maps each scope to a host and namespace.
+- A project has a remote from creation, private unless the user decides it is public. The profile maps each scope to a host and namespace.
+- Before the first public push there is a cleaning pass: no person names, usernames, employer or team names, internal product names, hostnames, memory bank names, or machine paths in files or in history; the commit identity is the one the user wants published; and the repo has a license.
 
 ## Worktrees
 
@@ -64,14 +69,14 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
   1. A link in `project.yaml`, when the project only needs to know where the code is.
   2. When the project needs the files to build or run and is a monorepo by design, the code lives in the monorepo and the owning project links to it.
   3. Otherwise a reference pinned to a commit or tag: a git submodule where the repo uses no worktrees, a pinned entry in the project's own catalog where it does.
-- A reference never points at a more private repo, and never at a branch.
+- A reference never points at a more private repo, and never at a branch, with one exception: a repo published as a plugin publishes on a `stable` branch, which moves only by deliberate promotion from `main`, never as a side effect, and a catalog may follow `stable`. Every other reference stays pinned to a commit or tag.
 - A deliberate temporary copy, such as a shadow migration, records the commit it was taken from and which copy is authoritative.
 
 ## Repos shared with other people
 
-- In a shared repo the user leads, the standard files go in through the repo's normal review. Its `project.yaml` carries only what is true for everyone who uses the repo: no personal memory details and no machine paths.
-- In a repo someone else owns, the standard files stay local: listed in the local exclude file (`.git/info/exclude`), never committed or pushed.
+- In a shared repo the user leads, the standard files go in through the repo's normal review, and so do later updates to the base block and the conventions copy. Its `project.yaml` carries only what is true for everyone who uses the repo: no personal memory details and no machine paths.
+- In a repo someone else owns, the standard files stay local: listed in the local exclude file (`.git/info/exclude`), never committed or pushed. The conventions copy is excluded the same way. An `AGENTS.md` the repo already tracks is left untouched, without the base block, since a change to it could not stay local.
 
 ## The profile
 
-One profile file per machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (kind and a URL pattern with `{key}`), and `memory` (kind and bank). See `profile.example.yaml`.
+One profile file per machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (kind and a URL pattern with `{key}`), and `memory` (kind and bank). See `references/profile.example.yaml` in the project-guide repository.
