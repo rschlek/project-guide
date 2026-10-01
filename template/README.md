@@ -1,3 +1,3 @@
 # <Title>
 
-<What this project is, who it is for, and anything a reader or agent needs to get started.>
+<Summary: what this project is and who it is for.>
