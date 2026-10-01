@@ -1,0 +1,22 @@
+{
+  "name": "project-guide",
+  "version": "0.1.0",
+  "description": "A simple standard for laying out, naming, and describing projects, with skills to create a new project to it or bring an existing repository up to it.",
+  "author": {
+    "name": "Rainier",
+    "email": "rschlekewey@gmail.com"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Project Guide",
+    "shortDescription": "Create and adopt projects to one standard.",
+    "longDescription": "Conventions for a flat projects root, four files every project carries, a project.yaml manifest, naming, private remotes, and worktrees, plus skills that create a new project or bring an existing repository up to the standard in place.",
+    "developerName": "Rainier",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": "Start a new project to the standard."
+  }
+}

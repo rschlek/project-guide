@@ -1,0 +1,9 @@
+{
+  "name": "project-guide",
+  "version": "0.1.0",
+  "author": {
+    "name": "Rainier",
+    "email": "rschlekewey@gmail.com"
+  },
+  "description": "A simple standard for laying out, naming, and describing projects, with skills to create a new project to it or bring an existing repository up to it."
+}
