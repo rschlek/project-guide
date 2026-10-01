@@ -1,0 +1,31 @@
+# Example profile. Copy it, fill in real values, and point the skills at the copy
+# (environment variable PROJECT_GUIDE_PROFILE, or a one-line ~/.project-guide file
+# holding the path).
+
+projects_root: ~/projects          # flat folder holding every project
+worktrees_dir: .claude/worktrees   # where worktrees nest inside a project
+
+scopes:
+  team:
+    meaning: serves the whole team
+    prefix: true                   # new project names start with "team-"
+    host: git.example.com
+    namespace: example-user
+  lab:
+    meaning: experiments for one group
+    prefix: true
+    host: git.example.com
+    namespace: example-user
+  personal:
+    meaning: personal projects
+    prefix: false                  # personal projects take no prefix
+    host: code.example.org
+    namespace: example-user
+
+tracker:
+  kind: example-tracker
+  url: https://tracker.example.com/browse/{key}
+
+memory:
+  kind: example-memory
+  bank: example-bank

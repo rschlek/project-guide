@@ -1,0 +1,5 @@
+# Machine-specific instance repos live nested here as their own repositories.
+*-instance/
+
+# Local worktrees.
+.claude/worktrees/
