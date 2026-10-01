@@ -1,4 +1,4 @@
-project: <slug>        # required; equals the top-level folder in the projects root
+project: <slug>        # required; equals the repo name
 title:                 # human-readable name
 summary: "<one sentence: what it is and who it is for>"   # required
 scope:                 # from the profile's scope list, or none once decided
