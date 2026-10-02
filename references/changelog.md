@@ -2,6 +2,11 @@
 
 Changes to the rules in `conventions.md`, newest first.
 
+## 2026-10-02
+
+- Added "Documents": documents are written for a reader who opens the project without the user's memory. A project is shared when `project.yaml` says `shared: true` or its `visibility` is `internal` or `public`; a shared project keeps its plans, the research behind them, and the decisions a reader needs in the project, while in a project that is the user's alone such documents are written only when asked. Plans are one file per piece of work in `docs/plan/`, carry no progress, and end with a `Closed:` line before moving to `docs/plan/closed/`. Decisions go in `docs/decisions.md`, newest first, and a changed decision gets a new entry. A document that describes how something is changes with the thing it describes; a document that records a moment carries its date in its file name and is not edited afterwards. No file says where work stands, and a handoff between the user's own sessions stays outside the project. Documents are cleaned for the reader before they go into a shared project. The rules apply to new documents only; existing documents are not renamed, moved, or converted. Status no longer lives in the memory system: who does what is in the tracker, which steps are done is read from the tracker and git history, and what is to be done and why is in the plans (version 0.7.0).
+- `project.yaml` gains the optional `shared` field, `true` when other people work on the project. The base block gains two lines: where a shared project's plans and decisions go, and that no document tracks progress. The new and adopt skills ask once whether other people work on the project and set `shared: true` on a yes (version 0.7.0).
+
 ## 2026-10-01
 
 - Sync sends every update to a repo in one of the profile's `shared_namespaces` through review: it reads the repo from its remote default branch, builds the commit without touching the checkout, and pushes it only to a review branch, unless the user approves a direct change for named repos in that run. The profile gains the optional `shared_namespaces` key. The standard version stays 0.6.0 (version 0.6.2).

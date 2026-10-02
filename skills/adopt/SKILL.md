@@ -58,8 +58,11 @@ description: >-
    `summary` drafted from the README and confirmed with the user (if the
    user cannot confirm, write the draft and list it as unconfirmed). Ask if
    the repo is private, internal, or public; record what the user confirms
-   as `visibility: internal` or `public`. Leave unknown fields empty. If
-   `project.yaml` exists, fill only its empty fields and propose changes.
+   as `visibility: internal` or `public`. Unless `visibility` is `internal`
+   or `public`, which already counts as shared, or someone else owns the
+   repo, ask once whether other people work on the project and on a yes set
+   `shared: true`. Leave unknown fields empty. If `project.yaml` exists,
+   fill only its empty fields and propose changes.
 8. If the profile's worktrees folder is not ignored, add the ignore line:
    in `.gitignore` in the user's own repo, in the local exclude file in a
    shared repo. In a repo someone else owns, also list the added standard
@@ -69,7 +72,9 @@ description: >-
 10. Report what is still missing against the standard, such as no remote, a
     name that does not match the naming rule, a repo not directly under the
     profile's projects root, committed credentials, or, in a public repo, no
-    license or a commit identity the user may not want published. Say which
+    license or a commit identity the user may not want published. Report
+    documents that do not match the Documents rules in the conventions, and
+    never rename, move, or convert them. Say which
     files were added or updated and what happens to them: left uncommitted in
     the user's own repo; left uncommitted to go in through review, with only
     the fields true for everyone, in a shared repo the user leads; excluded
