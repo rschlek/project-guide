@@ -70,10 +70,10 @@ description: >-
    namespace match `origin`. When several scopes match, none does, or there
    is no `origin`, leave `scope` empty and ask, offering any matches.
    `summary` drafted from the README and confirmed with the user (if the
-   user cannot confirm, write the draft and list it as unconfirmed). When
-   the user confirms the repo is public, set `visibility: public` if missing.
-   Leave unknown fields empty. If `project.yaml` already exists, fill only
-   its empty fields and propose changes to filled ones.
+   user cannot confirm, write the draft and list it as unconfirmed). Ask if
+   the repo is private, internal, or public; record what the user confirms
+   as `visibility: internal` or `public`. Leave unknown fields empty. If
+   `project.yaml` exists, fill only its empty fields and propose changes.
 9. If the profile's worktrees folder is not ignored, add the ignore line:
    in `.gitignore` in the user's own repo, in the local exclude file in a
    shared repo. In a repo someone else owns, also list the added standard

@@ -32,7 +32,7 @@ Required:
 Optional:
 - `title`: a human-readable name.
 - `scope`: one of the profile's scopes, or `none`. Scope says whose the project is and where it is hosted, not who uses it; the summary says who it serves.
-- `visibility`: only value `public`, present only on a public repo; absent means private. It lets an agent without network access tell that nothing identifying may be written in this repo.
+- `visibility`: `internal` (anyone inside the organization that hosts the repo can read it) or `public` (anyone can read it), present only when the repo is not private; absent means private. It lets an agent without network access tell what may be written in this repo.
 - `repo_role` and `repos`: multi-repo projects only. `repo_role` is `parent` or this repo's role; `repos` maps role to remote URL.
 - `tracking`: map of tracker system to item reference.
 - `memory`: tag, state model, instance, and bank, as applicable.
@@ -50,7 +50,8 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
 - The folder name equals the repo name.
 - New projects are named `<scope>-<subject>`, lowercase with hyphens. The scope comes from the profile's list; a scope marked as no prefix is left off.
 - Existing shared repos are not renamed just to conform.
-- A project has a remote from creation, private unless the user decides it is public. The profile maps each scope to a host and namespace.
+- A project has a remote from creation, private unless the user decides it is internal or public. The profile maps each scope to a host and namespace.
+- An internal repo may name the organization that hosts it, its teams, and its internal systems, but never holds other people's personal details, credentials, or data extracts.
 - Before the first public push there is a cleaning pass: no person names, usernames, employer or team names, internal product names, hostnames, memory bank names, or machine paths in files or in history; the commit identity is the one the user wants published; and the repo has a license.
 
 ## Worktrees
@@ -69,7 +70,7 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
   1. A link in `project.yaml`, when the project only needs to know where the code is.
   2. When the project needs the files to build or run and is a monorepo by design, the code lives in the monorepo and the owning project links to it.
   3. Otherwise a reference pinned to a commit or tag: a git submodule where the repo uses no worktrees, a pinned entry in the project's own catalog where it does.
-- A reference never points at a more private repo, and never at a branch, with one exception: a repo published as a plugin publishes on a `stable` branch, which moves only by deliberate promotion from `main`, never as a side effect, and a catalog may follow `stable`. Every other reference stays pinned to a commit or tag.
+- A reference never points at a more private repo (private, then internal, then public), and never at a branch, with one exception: a repo published as a plugin publishes on a `stable` branch, which moves only by deliberate promotion from `main`, never as a side effect, and a catalog may follow `stable`. Every other reference stays pinned to a commit or tag.
 - A deliberate temporary copy, such as a shadow migration, records the commit it was taken from and which copy is authoritative.
 
 ## Repos shared with other people

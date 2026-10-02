@@ -17,6 +17,9 @@ standard updates; put project-specific guidance in the section below it.
   tokens, or data extracts.
 - If `project.yaml` says `visibility: public`, anyone can read this repo:
   write no person, employer, team, host, or machine names into it.
+- If it says `visibility: internal`, everyone in the organization that
+  hosts this repo can read it: the organization's own names are fine,
+  other people's personal details are not.
 - In a repo other people use, changes go in through its review process,
   not straight to the main branch.
 - Keep work in progress in a worktree under `<worktrees_dir>/`, one

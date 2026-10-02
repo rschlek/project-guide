@@ -4,10 +4,10 @@ description: >-
   Create a new project to the project standard: a named folder under the
   projects root from the template, the standard files including a local copy
   of the conventions, project.yaml filled, git initialized, worktrees ignored,
-  a remote created (private unless the user decides it is public), and a
-  first commit pushed. Use when the user says
-  "new project", "start a project", "create a repo for X", "set up a project
-  for X", or "scaffold a project to the standard". Do NOT use for an existing
+  a remote created (private unless the user decides it is internal or
+  public), and a first commit pushed. Use when the user says "new project",
+  "start a project", "create a repo for X", "set up a project for X", or
+  "scaffold a project to the standard". Do NOT use for an existing
   repository (that is adopt), or for adding a worktree to a project.
 ---
 
@@ -26,15 +26,16 @@ description: >-
    a profile from `${CLAUDE_PLUGIN_ROOT}/references/profile.example.yaml`.
 3. Ask for the scope (from the profile's list), the subject, a human-readable
    title, a one-sentence summary saying what it is and who it is for, and
-   whether it is public (private unless the user decides otherwise). Build
-   the name per the naming rule. Stop if a folder of that name already
-   exists under the projects root.
+   whether it is private, internal, or public (private unless the user
+   decides otherwise). Build the name per the naming rule. Stop if a folder
+   of that name already exists under the projects root.
 4. Copy `${CLAUDE_PLUGIN_ROOT}/template` to `<projects_root>/<name>`.
 5. In `project.yaml`, set `project` to the name, and `title`, `summary`, and
-   `scope`, plus `visibility: public` for a public project. Put the title
-   and the summary in `README.md`. In `AGENTS.md`, set
-   `<version>` to the standard's version and `<worktrees_dir>` to the
-   profile's worktrees folder (default `.claude/worktrees`).
+   `scope`, plus `visibility: internal` or `visibility: public` for an
+   internal or public project. Put the title and the summary in
+   `README.md`. In `AGENTS.md`, set `<version>` to the standard's version
+   and `<worktrees_dir>` to the profile's worktrees folder (default
+   `.claude/worktrees`).
 6. Write `docs/project-conventions.md`: the header line below, a blank line,
    then the content of `${CLAUDE_PLUGIN_ROOT}/references/conventions.md`
    unchanged, with `<version>` set to the standard's version:
@@ -50,8 +51,9 @@ description: >-
    worktrees folder.
 9. For a public project, first run the cleaning pass from the conventions:
    nothing identifying in the files, the commit identity the user wants
-   published, and a license the user picks. Then confirm with the user and
-   create the remote, private unless the project is public, named after the
+   published, and a license the user picks. For an internal project, check
+   the files against the internal rule. Then confirm with the user and
+   create the remote, with the visibility the user chose, named after the
    folder, on the host and namespace the profile gives for the scope, and add
    it as `origin`.
 10. Make the first commit, whether or not a remote exists. Push only when

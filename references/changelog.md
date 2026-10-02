@@ -4,6 +4,7 @@ Changes to the rules in `conventions.md`, newest first.
 
 ## 2026-10-01
 
+- `visibility` gains a second value, `internal`: anyone inside the organization that hosts the repo can read it. An internal repo may name that organization, its teams, and its internal systems, but never holds other people's personal details, credentials, or data extracts; the public cleaning pass is unchanged. The user decides whether a remote is private, internal, or public, and a reference never points at a more private repo in that order (version 0.5.0).
 - Every project now carries `docs/project-conventions.md`, a copy of these rules whose first line names the version it was copied from, and its `AGENTS.md` opens with a marked base block of the rules every session needs. Both are replaced whole when the standard updates and never edited locally; project-specific guidance goes below the block. In a repo someone else owns, the copy is excluded and a tracked `AGENTS.md` is left without the block (version 0.4.0).
 - A project's remote is private unless the user decides it is public. A public repo carries `visibility: public` in `project.yaml`, and its first public push follows a cleaning pass: nothing identifying in files or history, a commit identity the user wants published, and a license (version 0.4.0).
 - "Code shared between projects" names the one exception to never referencing a branch: a repo published as a plugin publishes on a `stable` branch that moves only by deliberate promotion from `main`, and a catalog may follow it (version 0.4.0).
