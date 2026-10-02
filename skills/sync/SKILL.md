@@ -2,13 +2,16 @@
 name: sync
 description: >-
   Bring the project-guide base block and conventions copy up to date in every
-  adopted repository under the projects root in one run: plan, show the user,
-  then write, commit by path, and push on the user's go, opening a pull
-  request where the default branch refuses a direct push. Use when the user
+  repository under the projects root whose project.yaml is committed, adding
+  them where missing, and keep a local copy current where project.yaml is
+  local only; archived projects are skipped. Plan, show the user, then write,
+  commit by path, and push on the user's go, opening a pull request where the
+  default branch refuses a direct push. Use when the user
   says "sync my projects", "roll out the standard", "update the repos to the
   new version of the standard", or "which repos are behind the standard". Do
-  NOT use to bring a repository to the standard for the first time (that is
-  adopt), to create a project (that is new), or to change project.yaml.
+  NOT use for a repository without a committed project.yaml (bringing it to
+  the standard is adopt), to create a project (that is new), or to change
+  project.yaml.
 ---
 
 # Sync the standard
@@ -48,11 +51,19 @@ description: >-
 
 - A repo the plan marked skip is never touched, not even by hand to finish
   the job; the user clears the reason and runs sync again.
-- Sync never adopts a repo, never sets `visibility` or any other
-  `project.yaml` field, and never moves, renames, or deletes anything.
-- The script writes only `AGENTS.md`, inside the base block markers, and
-  `docs/project-conventions.md`, and commits exactly those two paths. In a
-  repo whose copy is excluded from git (one someone else owns), it updates
-  the local copy and never commits.
+- Which repos it covers: one whose `project.yaml` is committed gets the
+  block and the copy, added where missing and kept current; one whose
+  `project.yaml` is local only (a repo someone else owns) gets a local copy;
+  one with no `project.yaml`, or one not committed yet, is left to adopt
+  unless it already carries a block or a copy. A project whose
+  `project.yaml` says `archived` is always skipped; a parked one is not.
+  The standard's own repository is skipped.
+- Sync never sets `visibility` or any other `project.yaml` field, and never
+  moves, renames, or deletes anything.
+- The script writes `AGENTS.md` (the block only, or a new file from the
+  template) and `docs/project-conventions.md`, and commits only those paths.
+  Where `project.yaml` or the copy is local only, it never commits and never
+  touches a tracked `AGENTS.md`; it may add the copy's path, once, to the
+  repo's local exclude file so the copy never shows as untracked.
 - It never stashes, forces, rewrites history, or changes the commit
   identity. A run on an unchanged standard reports every repo current.
