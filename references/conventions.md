@@ -17,7 +17,7 @@ Every project has these files, even if some are blank:
 - `project.yaml`: all structured facts about the project.
 - `docs/project-conventions.md`: a copy of these rules, so an agent can read them without the plugin or a network. Its first line names the standard and the version it was copied from.
 
-The base block and the copy belong to the standard, not to the project: neither is edited locally, and when the standard updates each is replaced whole. Everything else in `AGENTS.md` is left as it is.
+The base block and the copy belong to the standard, not to the project: neither is edited locally, and when the standard updates each is replaced whole, across the projects root by the sync skill. Both carry the standard version, the release in which the block or these rules last changed, so a release that changes neither leaves every repo current. A block or copy at that version is left as it is, an older one is replaced whole, and a newer one is reported. Everything else in `AGENTS.md` is left as it is.
 
 Written material goes in `docs/` by convention. Beyond the copy above, nothing else is prescribed. Credentials and data extracts are never committed.
 
