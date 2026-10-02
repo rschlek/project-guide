@@ -1,9 +1,9 @@
 # Agent guidance
 
-<!-- project-guide:base start (<version>) -->
+<!-- project-guide:base start (0.6.0) -->
 ## Working in this repo
 
-This repo follows the project-guide standard, version <version>
+This repo follows the project-guide standard, version 0.6.0
 (https://github.com/rschlek/project-guide). This block is replaced when the
 standard updates; put project-specific guidance in the section below it.
 
