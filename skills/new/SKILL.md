@@ -24,14 +24,16 @@ description: >-
 3. Ask for the scope (from the profile's list), the subject, a human-readable
    title, a one-sentence summary saying what it is and who it is for, and
    whether it is private, internal, or public (private unless the user
-   decides otherwise). Ask once whether other people work on the project.
-   Build the name per the naming rule. Stop if a folder of that name already
-   exists under the projects root.
+   decides otherwise). Unless the user chose internal or public, which
+   already counts as shared, ask once whether other people work on the
+   project. Build the name per the naming rule. Stop if a folder of that name
+   already exists under the projects root.
 4. Copy `${CLAUDE_PLUGIN_ROOT}/template` to `<projects_root>/<name>`.
 5. In `project.yaml`, set `project` to the name, and `title`, `summary`, and
    `scope`, plus `visibility: internal` or `visibility: public` for an
-   internal or public project, and `shared: true` when other people work on
-   it; otherwise leave that line out. Put the title and the summary in
+   internal or public project. For a private project, add `shared: true`
+   when other people work on it; otherwise leave that line out. Put the
+   title and the summary in
    `README.md`.
 6. Fill the base block and write the conventions copy with Python 3.9 or
    later: `python ${CLAUDE_PLUGIN_ROOT}/scripts/sync.py --repo
