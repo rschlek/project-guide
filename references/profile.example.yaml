@@ -5,6 +5,9 @@
 projects_root: ~/projects          # flat folder holding every project
 worktrees_dir: .claude/worktrees   # where worktrees nest inside a project
 
+shared_namespaces:                 # optional: remote namespaces of repos other people use; sync sends their updates through review
+  - example-team                   # or host/namespace, such as git.example.com/example-team
+
 scopes:
   team:
     meaning: projects the team owns

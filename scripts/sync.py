@@ -13,6 +13,11 @@ also commits exactly those two paths. --push also pushes the default branch to
 origin; when origin refuses, it pushes the commit to a review branch instead.
 --repo --add places the block and the copy in one folder and never commits.
 
+--shared-namespaces a,b marks repos whose origin is in one of those namespaces
+as shared: they are read from origin's default branch, and --push commits the
+update with a temporary index and pushes it only to a review branch, never
+touching the checkout. --direct a,b names shared repos to treat as own repos.
+
 Standard library only; Python 3.9 or later.
 """
 import argparse
@@ -20,8 +25,10 @@ import glob
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 PLUGIN_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 URL = "https://github.com/rschlek/project-guide"
@@ -75,7 +82,10 @@ def last_line(text):
 def load(path):
     """Return (text with original line endings, has BOM, uses CRLF)."""
     with open(path, "rb") as f:
-        raw = f.read()
+        return parse(f.read())
+
+
+def parse(raw):
     bom = raw.startswith(BOM)
     text = raw[3:].decode("utf-8") if bom else raw.decode("utf-8")
     crlf = text.count("\r\n")
@@ -180,6 +190,57 @@ def manifest(path, in_git):
     return "untracked", text
 
 
+def facts(ag, raw_copy):
+    """What the AGENTS.md text (parsed, or None) and the copy bytes (or None) carry."""
+    f = {"ag": ag, "cp": None, "cver": None, "cforeign": False}
+    f["binfo"] = binfo = block_info(ag[0]) if ag else None
+    f["bver"] = binfo[2] if isinstance(binfo, tuple) else None
+    if raw_copy is not None:
+        try:
+            f["cp"] = parse(raw_copy)
+            m = HEADER_RE.match(f["cp"][0].split("\n", 1)[0])
+            f["cver"] = m.group(1) if m else None
+            f["cforeign"] = not m
+        except UnicodeDecodeError:
+            f["cforeign"] = True
+    return f
+
+
+def desired(f, block_wanted, std, add, notes):
+    """(writes, skip reason): the bytes the two files should hold where they differ."""
+    writes = {}
+    ag, binfo, bver, cp, cver = f["ag"], f["binfo"], f["bver"], f["cp"], f["cver"]
+    if block_wanted:
+        if binfo == "malformed":
+            if not add:
+                return {}, "AGENTS.md base block markers are malformed"
+            notes.append("AGENTS.md block markers are malformed; left it")
+        elif newer(bver, std.version):
+            notes.append("AGENTS.md block is newer (%s); left it" % bver)
+        elif ag is None:
+            writes[AGENTS] = std.agents_new.encode("utf-8")
+        else:
+            text, bom, crlf = ag
+            new = new_agents_text(text, crlf, binfo, std)
+            if new != text:
+                writes[AGENTS] = encode(new, bom)
+    elif ag is not None and binfo is None:
+        notes.append("AGENTS.md left without the block")
+    if f["cforeign"]:
+        if not add:
+            return {}, "docs/project-conventions.md exists without the standard header"
+        notes.append("docs/project-conventions.md exists without the standard header; left it")
+    elif newer(cver, std.version):
+        notes.append("conventions copy is newer (%s); left it" % cver)
+    else:
+        crlf = cp[2] if cp else False
+        bom = cp[1] if cp else False
+        want = std.copy.replace("\n", "\r\n") if crlf else std.copy
+        if cp is None or cp[0] != want:
+            writes[COPY] = encode(want, bom)
+    return writes, ""
+
+
 def examine(path, std, add=False, copy_only=False):
     """Classify one folder. Returns a row dict; row['_writes'] maps rel path to bytes."""
     row = {"name": "", "path": path, "state": "", "action": "none", "reason": "",
@@ -197,17 +258,12 @@ def examine(path, std, add=False, copy_only=False):
     local_py = not add and py_state == "ignored"
 
     ag = load(ag_path) if os.path.isfile(ag_path) else None
-    binfo = block_info(ag[0]) if ag else None
-    cp, cver, cforeign = None, None, False
-    if os.path.isfile(cp_path):
-        try:
-            cp = load(cp_path)
-            m = HEADER_RE.match(cp[0].split("\n", 1)[0])
-            cver = m.group(1) if m else None
-            cforeign = not m
-        except UnicodeDecodeError:
-            cforeign = True
-    bver = binfo[2] if isinstance(binfo, tuple) else None
+    with_copy = os.path.isfile(cp_path)
+    if with_copy:
+        with open(cp_path, "rb") as f:
+            raw_copy = f.read()
+    f = facts(ag, raw_copy if with_copy else None)
+    binfo, bver, cver = f["binfo"], f["bver"], f["cver"]
 
     if not add and binfo is None and cver is None and py_state in ("absent", "untracked"):
         why = "no project.yaml" if py_state == "absent" else "project.yaml is not committed"
@@ -224,40 +280,10 @@ def examine(path, std, add=False, copy_only=False):
         block_wanted = isinstance(binfo, tuple) and is_ignored(path, AGENTS)
     else:
         block_wanted = not copy_only and not (copy_ignored and binfo is None)
-    if block_wanted:
-        if binfo == "malformed":
-            if not add:
-                return dict(row, state="out of date", action="skip",
-                            reason="AGENTS.md base block markers are malformed")
-            notes.append("AGENTS.md block markers are malformed; left it")
-        elif newer(bver, std.version):
-            notes.append("AGENTS.md block is newer (%s); left it" % bver)
-        elif ag is None:
-            row["_writes"][AGENTS] = std.agents_new.encode("utf-8")
-        else:
-            text, bom, crlf = ag
-            new = new_agents_text(text, crlf, binfo, std)
-            if new != text:
-                row["_writes"][AGENTS] = encode(new, bom)
-    elif ag is not None and binfo is None:
-        notes.append("AGENTS.md left without the block")
-
-    # The conventions copy.
-    if cforeign:
-        if not add:
-            return dict(row, state="out of date", action="skip",
-                        reason="docs/project-conventions.md exists without the standard header")
-        notes.append("docs/project-conventions.md exists without the standard header; left it")
-    elif newer(cver, std.version):
-        notes.append("conventions copy is newer (%s); left it" % cver)
-    else:
-        crlf = cp[2] if cp else False
-        bom = cp[1] if cp else False
-        want = std.copy.replace("\n", "\r\n") if crlf else std.copy
-        if cp is None or cp[0] != want:
-            row["_writes"][COPY] = encode(want, bom)
-
-    writes = row["_writes"]
+    writes, skip = desired(f, block_wanted, std, add, notes)
+    if skip:
+        return dict(row, state="out of date", action="skip", reason=skip)
+    row["_writes"] = writes
     row["_commit"] = [] if local_py else [p for p in writes if not (in_git and is_ignored(path, p))]
     row["_exclude"] = exclude = local_py and not copy_ignored
     local = (copy_ignored or local_py) and not row["_commit"]
@@ -394,6 +420,179 @@ def push(row, std, sha):
                 % (default, default, ahead, default))
 
 
+def origin_owner(path):
+    """(host, owner path) of origin's URL, as configured, in ssh, scp-like, or https form."""
+    rc, out, _ = git(path, "config", "--get", "remote.origin.url")
+    url = out.strip()
+    m = (re.match(r"^[A-Za-z][A-Za-z0-9+.-]*://(?:[^@/]+@)?([^/:]+)(?::\d+)?/(.+)$", url)
+         or re.match(r"^(?:[^@/]+@)?([^/:\\]{2,}):(?!//)(.+)$", url))
+    if rc != 0 or not m:
+        return None, None
+    rest = m.group(2).strip("/")
+    rest = rest[:-4] if rest.endswith(".git") else rest
+    return m.group(1).lower(), "/".join(rest.split("/")[:-1]).lower()
+
+
+def in_namespaces(path, entries):
+    """True when origin's owner is one of the entries (a namespace, nested groups by prefix,
+    or host/namespace)."""
+    host, owner = origin_owner(path)
+    if not owner:
+        return False
+
+    def under(ns):
+        return bool(ns) and (owner == ns or owner.startswith(ns + "/"))
+    for e in entries:
+        e = e.strip("/").lower()
+        first, _, rest = e.partition("/")
+        if under(e) or (rest and first == host and under(rest)):
+            return True
+    return False
+
+
+def git_bytes(path, *args, env=None, data=None):
+    r = subprocess.run(["git", "-C", path] + list(args), capture_output=True, env=env or ENV, input=data)
+    if r.returncode != 0:
+        raise InternalError("git %s failed: %s" % (args[0], last_line(r.stderr.decode("utf-8", "replace"))))
+    return r.stdout
+
+
+def examine_shared(path, std):
+    """Classify a shared repo from origin's default branch; nothing local is read but
+    the fetched refs (a local-only project.yaml or copy falls back to the local copy path)."""
+    row = {"path": path, "state": "", "action": "none", "reason": "", "_writes": {},
+           "_commit": [], "_git": True, "_shared": True}
+    default, _ = default_branch(path, None)
+    ref = "refs/remotes/origin/%s" % default
+    if default is None or git(path, "rev-parse", "-q", "--verify", ref)[0] != 0:
+        return dict(row, state="out of date", action="skip",
+                    reason="shared namespace, but origin's default branch has not been fetched")
+    src = "from origin/" + default
+    row.update(_ref=ref, _default=default)
+    listing = git_bytes(path, "ls-tree", "-r", "-z", ref, "--", "project.yaml", AGENTS, COPY,
+                        "template/AGENTS.md", "references/conventions.md")
+    files = {}
+    for entry in listing.split(b"\0"):
+        if entry:
+            meta, rel = entry.split(b"\t", 1)
+            mode, kind, sha = meta.decode().split()
+            files[rel.decode()] = (mode, sha)
+    row["_modes"] = {k: v[0] for k, v in files.items()}
+
+    def blob(rel):
+        return git_bytes(path, "cat-file", "blob", files[rel][1]) if rel in files else None
+    tpl = blob("template/AGENTS.md")
+    if tpl is not None and START.encode() in tpl and "references/conventions.md" in files:
+        return dict(row, state="standard source", action="skip", reason="the standard's own repository, " + src)
+    py = blob("project.yaml")
+    if py is not None and ARCHIVED_RE.search(py.decode("utf-8", "replace")):
+        return dict(row, state="archived", action="skip", reason="project.yaml says archived (%s)" % src)
+    raw_ag = blob(AGENTS)
+    f = facts(parse(raw_ag) if raw_ag is not None else None, blob(COPY))
+    if py is None:
+        if is_ignored(path, "project.yaml") or is_ignored(path, COPY):
+            return dict(row, _local=True)
+        if f["binfo"] is None and f["cver"] is None:
+            return dict(row, state="not adopted", action="skip",
+                        reason="no project.yaml, no base block, no copy (%s)" % src)
+    if newer(f["bver"], std.version) or newer(f["cver"], std.version):
+        return dict(row, state="newer", action="skip", reason="block %s, copy %s, standard %s, %s"
+                    % (f["bver"] or "-", f["cver"] or "-", std.version, src))
+    writes, skip = desired(f, True, std, False, [])
+    if skip:
+        return dict(row, state="out of date", action="skip", reason=skip + ", " + src)
+    if not writes:
+        return dict(row, state="current", reason=src)
+    return dict(row, _writes=writes, state="out of date", action="update",
+                reason="%s: block %s, copy %s; shared, goes through review"
+                % (src, f["bver"] or "missing", f["cver"] or "missing"))
+
+
+def review_branch(row, std):
+    """Commit the update on top of origin's default branch with plumbing and a temporary
+    index, and push it to the review branch. The checkout, index, and local branches are
+    never touched, and the default branch is never pushed."""
+    path, ref, default, writes = row["path"], row["_ref"], row["_default"], row["_writes"]
+    branch = "standard/project-guide-" + std.version
+    base = git_ok(path, "rev-parse", ref).strip()
+    tmp = tempfile.mkdtemp(prefix="project-guide-sync-")
+    env = dict(ENV, GIT_INDEX_FILE=os.path.join(tmp, "index"))
+    try:
+        git_bytes(path, "read-tree", base, env=env)
+        for rel in sorted(writes):
+            sha = git_bytes(path, "hash-object", "-w", "--no-filters", "--stdin", env=env,
+                            data=writes[rel]).decode().strip()
+            mode = row["_modes"].get(rel, "100644")
+            git_bytes(path, "update-index", "--add", "--cacheinfo", "%s,%s,%s" % (mode, sha, rel), env=env)
+        tree = git_bytes(path, "write-tree", env=env).decode().strip()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    def changed(new):
+        out = git_ok(path, "diff-tree", "-r", "--name-only", base, new)
+        return set(x for x in out.split("\n") if x)
+    if changed(tree) != set(writes):
+        raise InternalError("the review tree changes unexpected paths: " + ", ".join(sorted(changed(tree))))
+    rc, out, err = git(path, "ls-remote", "origin", "refs/heads/" + branch)
+    if rc != 0:
+        raise InternalError("ls-remote failed: " + last_line(err))
+    if out.strip():
+        tip = out.split()[0]
+        rc, tip_tree, _ = git(path, "rev-parse", "-q", "--verify", tip + "^{tree}")
+        if rc == 0 and tip_tree.strip() == tree:
+            return dict(row, state="needs a pull request", action="none",
+                        reason="review branch already pushed: %s into %s" % (branch, default))
+        return dict(row, state="out of date", action="skip",
+                    reason="%s already exists on origin with a different tip (%s); not forced"
+                    % (branch, tip[:7]))
+    msg = MESSAGE.format(v=std.version)
+    commit_sha = git_ok(path, "commit-tree", tree, "-p", base, "-m", msg).strip()
+    if changed(commit_sha) != set(writes):
+        raise InternalError("the review commit changes unexpected paths")
+    rc, _, err = git(path, "push", "-q", "origin", "%s:refs/heads/%s" % (commit_sha, branch))
+    if rc != 0:
+        return dict(row, state="push failed", action="none", reason=last_line(err))
+    return dict(row, state="needs a pull request", action="pushed %s to %s" % (commit_sha[:7], branch),
+                reason="open a pull request into %s; the checkout was not touched" % default)
+
+
+def shared_flow(full, std, a):
+    if a.push:
+        rc, _, err = git(full, "fetch", "-q", "origin")
+        if rc != 0:
+            return {"path": full, "state": "out of date", "action": "skip",
+                    "reason": "fetch failed: " + last_line(err)}
+    row = examine_shared(full, std)
+    if row.get("_local"):
+        return own_flow(full, std, a)
+    if row["action"] != "update" or not a.apply:
+        return row
+    if not a.push:
+        return dict(row, state="needs a pull request", action="none",
+                    reason="shared namespace: run with --push to prepare the review branch")
+    return review_branch(row, std)
+
+
+def own_flow(full, std, a):
+    row = examine(full, std)
+    if a.apply and row["action"] == "update":
+        if a.commit and row["_commit"] and "origin" in git_ok(full, "remote").split():
+            rc, _, err = git(full, "fetch", "-q", "origin")
+            if rc != 0:
+                return dict(row, action="skip", reason="fetch failed: " + last_line(err))
+            row = examine(full, std)
+        if row["action"] == "update":
+            write(row)
+            if a.commit and row["_commit"]:
+                sha = commit(row, std)
+                if a.push:
+                    return push(row, std, sha)
+                return dict(row, state="updated", action="committed " + sha)
+            return dict(row, state="updated" if row["state"] == "out of date"
+                        else row["state"], action="written, not committed")
+    return row
+
+
 def discover(root, worktrees_dir):
     skip_top = worktrees_dir.replace("\\", "/").strip("/").split("/")[0]
     found = []
@@ -429,6 +628,10 @@ def main(argv=None):
     p.add_argument("--commit", action="store_true")
     p.add_argument("--push", action="store_true")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--shared-namespaces", default="",
+                   help="origin namespaces (or host/namespace) of repos other people use")
+    p.add_argument("--direct", default="",
+                   help="shared repos the user approved for a direct change in this run")
     a = p.parse_args(argv)
     a.commit = a.commit or a.push
     a.apply = a.apply or a.commit
@@ -455,29 +658,18 @@ def main(argv=None):
                 continue
             targets.append((name, full))
 
+    shared_ns, direct = names(a.shared_namespaces), names(a.direct)
     for name, full in targets:
         try:
-            row = examine(full, std, add=bool(a.repo), copy_only=a.copy_only)
-            if a.repo and row["_writes"]:
-                write(row)
-            elif a.apply and row["action"] == "update":
-                if a.commit and row["_commit"] and "origin" in git_ok(full, "remote").split():
-                    rc, _, err = git(full, "fetch", "-q", "origin")
-                    if rc != 0:
-                        row = dict(row, action="skip", reason="fetch failed: " + last_line(err))
-                    else:
-                        row = examine(full, std)
-                if row["action"] == "update":
+            if a.repo:
+                row = examine(full, std, add=True, copy_only=a.copy_only)
+                if row["_writes"]:
                     write(row)
-                    if a.commit and row["_commit"]:
-                        sha = commit(row, std)
-                        if a.push:
-                            row = push(row, std, sha)
-                        else:
-                            row = dict(row, state="updated", action="committed " + sha)
-                    else:
-                        row = dict(row, state="updated" if row["state"] == "out of date"
-                                   else row["state"], action="written, not committed")
+            elif (shared_ns and name not in direct and os.path.basename(full) not in direct
+                  and in_namespaces(full, shared_ns)):
+                row = shared_flow(full, std, a)
+            else:
+                row = own_flow(full, std, a)
         except (InternalError, OSError, UnicodeDecodeError, ValueError) as e:
             failed = True
             row = {"path": full, "state": "error", "action": "none", "reason": str(e)}
