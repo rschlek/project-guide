@@ -6,6 +6,7 @@ tracking:              # map of system -> reference
 memory:                # tag, state_model, instance, bank as applicable
 links:                 # sources, outputs, docs, people
 # visibility:          # only when not private: internal or public (absent means private)
+# shared:              # only when other people work on the project: true
 # repo_role:           # only in a multi-repo project: parent, or this repo's role
 # repos:               # only in a multi-repo project: role -> remote URL
 # parked:              # only when deliberately parked: since (date) and reason
