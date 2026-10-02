@@ -93,7 +93,7 @@ A project is shared when other people work on it or can read it: `project.yaml` 
 
 ## Repos shared with other people
 
-- In a shared repo the user leads, the standard files go in through the repo's normal review, and so do later updates to the base block and the conventions copy. Its `project.yaml` carries only what is true for everyone who uses the repo: no personal memory details and no machine paths.
+- In a shared repo the user leads, the standard files go in through the repo's normal review, and so do later updates to the base block and the conventions copy. Its `project.yaml` carries only what is true for everyone who uses the repo: no personal memory details and no machine paths. It counts as shared for the Documents rules: its `project.yaml` says `shared: true` unless its `visibility` is already `internal` or `public`.
 - In a repo someone else owns, the standard files stay local: listed in the local exclude file (`.git/info/exclude`), never committed or pushed. The conventions copy is excluded the same way. An `AGENTS.md` the repo already tracks is left untouched, without the base block, since a change to it could not stay local.
 
 ## The profile
