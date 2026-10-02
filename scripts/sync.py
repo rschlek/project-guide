@@ -35,6 +35,7 @@ AGENTS = "AGENTS.md"
 COPY = "docs/project-conventions.md"
 BOM = b"\xef\xbb\xbf"
 ENV = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+ARCHIVED_RE = re.compile(r"^archived[ \t]*:", re.M)
 MESSAGE = "Update the project-guide base block and conventions copy ({v})"
 
 
@@ -152,6 +153,33 @@ def is_ignored(path, rel):
     return git(path, "check-ignore", "-q", "--", rel)[0] == 0
 
 
+def is_tracked(path, rel):
+    return git(path, "ls-files", "--error-unmatch", "--", rel)[0] == 0
+
+
+def is_standard_source(path):
+    """The standard's own repository: found by its files, never by its path."""
+    tpl = os.path.join(path, "template", "AGENTS.md")
+    if not (os.path.isfile(tpl) and os.path.isfile(os.path.join(path, "references", "conventions.md"))):
+        return False
+    with open(tpl, "rb") as f:
+        return START.encode() in f.read()
+
+
+def manifest(path, in_git):
+    """(state, text) of project.yaml: absent, tracked, ignored (local only), or untracked."""
+    full = os.path.join(path, "project.yaml")
+    if not os.path.isfile(full):
+        return "absent", ""
+    with open(full, "rb") as f:
+        text = f.read().decode("utf-8", "replace")
+    if in_git and is_tracked(path, "project.yaml"):
+        return "tracked", text
+    if in_git and is_ignored(path, "project.yaml"):
+        return "ignored", text
+    return "untracked", text
+
+
 def examine(path, std, add=False, copy_only=False):
     """Classify one folder. Returns a row dict; row['_writes'] maps rel path to bytes."""
     row = {"name": "", "path": path, "state": "", "action": "none", "reason": "",
@@ -161,6 +189,12 @@ def examine(path, std, add=False, copy_only=False):
     cp_path = os.path.join(path, *COPY.split("/"))
     copy_ignored = in_git and is_ignored(path, COPY)
     notes = []
+    py_state, py_text = manifest(path, in_git)
+    if not add and is_standard_source(path):
+        return dict(row, state="standard source", action="skip", reason="the standard's own repository")
+    if not add and ARCHIVED_RE.search(py_text):
+        return dict(row, state="archived", action="skip", reason="project.yaml says archived")
+    local_py = not add and py_state == "ignored"
 
     ag = load(ag_path) if os.path.isfile(ag_path) else None
     binfo = block_info(ag[0]) if ag else None
@@ -175,14 +209,21 @@ def examine(path, std, add=False, copy_only=False):
             cforeign = True
     bver = binfo[2] if isinstance(binfo, tuple) else None
 
-    if not add and binfo is None and cver is None:
-        return dict(row, state="not adopted", action="skip", reason="no base block and no conventions copy")
+    if not add and binfo is None and cver is None and py_state in ("absent", "untracked"):
+        why = "no project.yaml" if py_state == "absent" else "project.yaml is not committed"
+        return dict(row, state="not adopted", action="skip", reason=why + ", no base block, no copy")
+    if local_py and is_tracked(path, COPY):
+        return dict(row, state="local copy only", action="skip",
+                    reason="project.yaml is local only but the copy is tracked")
     if not add and (newer(bver, std.version) or newer(cver, std.version)):
         return dict(row, state="newer", action="skip",
                     reason="block %s, copy %s, standard %s" % (bver or "-", cver or "-", std.version))
 
     # The base block.
-    block_wanted = not copy_only and not (copy_ignored and binfo is None)
+    if local_py:  # a repo someone else owns: only a local AGENTS.md may carry the block
+        block_wanted = isinstance(binfo, tuple) and is_ignored(path, AGENTS)
+    else:
+        block_wanted = not copy_only and not (copy_ignored and binfo is None)
     if block_wanted:
         if binfo == "malformed":
             if not add:
@@ -217,17 +258,20 @@ def examine(path, std, add=False, copy_only=False):
             row["_writes"][COPY] = encode(want, bom)
 
     writes = row["_writes"]
-    row["_commit"] = [p for p in writes if not (in_git and is_ignored(path, p))]
-    local = copy_ignored and not row["_commit"]
+    row["_commit"] = [] if local_py else [p for p in writes if not (in_git and is_ignored(path, p))]
+    row["_exclude"] = exclude = local_py and not copy_ignored
+    local = (copy_ignored or local_py) and not row["_commit"]
     if add:
         state = "updated" if writes else "current"
         action = "write " + ", ".join(sorted(writes)) if writes else "none"
         return dict(row, state=state, action=action, reason="; ".join(notes))
-    if not writes:
-        return dict(row, state="current", reason="local copy, not tracked" if copy_ignored else "")
+    if not writes and not exclude:
+        return dict(row, state="current", reason="local copy, not tracked" if local else "")
     if local:
-        return dict(row, state="local copy only", action="update",
-                    reason="copy is excluded from git; written, never committed")
+        why = "project.yaml is local only" if local_py else "copy is excluded from git"
+        if exclude:
+            why += "; will add docs/project-conventions.md to the local exclude file"
+        return dict(row, state="local copy only", action="update", reason=why + "; never committed")
     skip = skip_reason(path)
     if skip:
         return dict(row, state="out of date", action="skip", reason=skip)
@@ -276,9 +320,30 @@ def skip_reason(path):
     return ""
 
 
+def add_exclude(path):
+    """List the copy in the repo's local exclude file once, so it never shows as untracked."""
+    rel = git_ok(path, "rev-parse", "--git-path", "info/exclude").strip()
+    full = rel if os.path.isabs(rel) else os.path.join(path, rel)
+    data = b""
+    if os.path.isfile(full):
+        with open(full, "rb") as f:
+            data = f.read()
+    if COPY.encode() not in [x.strip() for x in data.splitlines()]:
+        eol = b"\r\n" if b"\r\n" in data else b"\n"
+        if data and not data.endswith(b"\n"):
+            data += eol
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "wb") as f:
+            f.write(data + COPY.encode() + eol)
+    if not is_ignored(path, COPY):
+        raise InternalError("the copy is still not ignored after adding it to " + rel)
+
+
 def write(row):
     path = row["path"]
     before = status_lines(path) if row["_git"] else set()
+    if row.get("_exclude"):
+        add_exclude(path)
     for rel, data in row["_writes"].items():
         full = os.path.join(path, *rel.split("/"))
         os.makedirs(os.path.dirname(full), exist_ok=True)
