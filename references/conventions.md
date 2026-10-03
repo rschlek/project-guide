@@ -36,7 +36,7 @@ Optional:
 - `shared`: `true` when other people work on this project, present only then. It is set when the user decides to share the project. A project whose `visibility` is `internal` or `public` counts as shared without it.
 - `repo_role` and `repos`: multi-repo projects only. `repo_role` is `parent` or this repo's role; `repos` maps role to remote URL.
 - `tracking`: map of tracker system to item reference.
-- `memory`: tag, state model, instance, and bank, as applicable.
+- `memory`: tag, state model, and instance, as applicable.
 - `links`: sources, outputs, docs, people.
 - `parked` or `archived`: a dated decision (`since`) with a `reason`. Present only when deliberately set.
 

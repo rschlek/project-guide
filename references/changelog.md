@@ -2,6 +2,10 @@
 
 Changes to the rules in `conventions.md`, newest first.
 
+## 2026-10-03
+
+- The project's `memory` field holds the tag, state model, and instance, and no longer the bank: a memory bank belongs to a person, not to a project, so which bank a project's memory goes to comes from the profile's `memory` section (version 0.7.1).
+
 ## 2026-10-02
 
 - Added "Documents": documents are written for a reader who opens the project without the user's memory. A project is shared when `project.yaml` says `shared: true` or its `visibility` is `internal` or `public`; a shared project keeps its plans, the research behind them, and the decisions a reader needs in the project, while in a project that is the user's alone such documents are written only when asked. Plans are one file per piece of work in `docs/plan/`, carry no progress, and end with a `Closed:` line before moving to `docs/plan/closed/`. Decisions go in `docs/decisions.md`, newest first, and a changed decision gets a new entry. A document that describes how something is changes with the thing it describes; a document that records a moment carries its date in its file name and is not edited afterwards. No file says where work stands, and a handoff between the user's own sessions stays outside the project. Documents are cleaned for the reader before they go into a shared project. The rules apply to new documents only; existing documents are not renamed, moved, or converted. No document tracks progress: who is doing which task is in the tracker, which steps are done is read from the tracker's items and git history, and what is to be done and why is in the project's plans (version 0.7.0).
