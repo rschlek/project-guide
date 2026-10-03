@@ -3,7 +3,7 @@ title:                 # human-readable name
 summary: "<one sentence: what it is and who it is for>"   # required
 scope:                 # from the profile's scope list, or none once decided
 tracking:              # map of system -> reference
-memory:                # tag, state_model, instance, bank as applicable
+memory:                # tag, state_model, instance as applicable
 links:                 # sources, outputs, docs, people
 # visibility:          # only when not private: internal or public (absent means private)
 # shared:              # only when other people work on the project: true
