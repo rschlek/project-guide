@@ -10,6 +10,7 @@ A small standard for how projects are laid out, named, hosted, and described, pa
 - `skills/new`: create a new project to the standard.
 - `skills/adopt`: bring an existing repository up to the standard, in place.
 - `skills/sync`: bring the base block and the conventions copy up to date in every adopted repo under the projects root, in one run.
+- `agents/standards.md`: the agent that runs the heavy phases of the three skills, and restructures such as splitting a repo, across many repositories; it proposes every push, remote, and deletion.
 
 ## Profile
 
