@@ -4,7 +4,7 @@
   "license": "MIT",
   "description": "A simple standard for laying out, naming, and describing projects, with skills to create a new project to it, bring an existing repository up to it, and keep adopted repositories current.",
   "author": {
-    "name": "Rainier",
+    "name": "rschlek",
     "email": "93355904+rschlek@users.noreply.github.com"
   },
   "skills": "./skills/",
@@ -12,7 +12,7 @@
     "displayName": "Project Guide",
     "shortDescription": "Create and adopt projects to one standard.",
     "longDescription": "Conventions for a flat projects root, the standard files every project carries (including a local copy of the conventions and a base block in AGENTS.md), a project.yaml manifest, naming, remotes and visibility, and worktrees, plus skills that create a new project, bring an existing repository up to the standard in place, and keep every adopted repository current with the standard.",
-    "developerName": "Rainier",
+    "developerName": "rschlek",
     "category": "Productivity",
     "capabilities": [
       "Read",

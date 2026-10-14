@@ -3,7 +3,7 @@
   "version": "0.8.0",
   "license": "MIT",
   "author": {
-    "name": "Rainier",
+    "name": "rschlek",
     "email": "93355904+rschlek@users.noreply.github.com"
   },
   "description": "A simple standard for laying out, naming, and describing projects, with skills to create a new project to it, bring an existing repository up to it, and keep adopted repositories current."
