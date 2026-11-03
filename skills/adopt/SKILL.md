@@ -61,17 +61,22 @@ description: >-
    as `visibility: internal` or `public`. Unless `visibility` is `internal`
    or `public`, which already counts as shared, or someone else owns the
    repo, ask once whether other people work on the project and on a yes set
-   `shared: true`. Leave unknown fields empty. If `project.yaml` exists,
-   fill only its empty fields and propose changes.
-8. If the profile's worktrees folder is not ignored, add the ignore line:
-   in `.gitignore` in the user's own repo, in the local exclude file in a
+   `shared: true`. Set `memory.tag` to `project:<project>`; set
+   `memory.system` only when the user confirms the kind (`personal`,
+   `shared`, or `repo`). Leave unknown fields empty. If `project.yaml`
+   exists, fill only its empty fields and propose changes; propose replacing
+   `repo_role` and `repos` with `parent` and `links`, and removing any bank,
+   instance, or server name from `memory`.
+8. If the profile's worktrees folder or `project.local.yaml` is not
+   ignored, add the ignore line: in `.gitignore` in the user's own repo, in the local exclude file in a
    shared repo. In a repo someone else owns, also list the added standard
    files, the conventions copy included, in the local exclude file.
 9. Check that no `<...>` placeholder remains in an added or changed
    `README.md`, `project.yaml`, `AGENTS.md`, or the copy's header line.
 10. Report what is still missing against the standard, such as no remote, a
     name that does not match the naming rule, a repo not directly under the
-    profile's projects root, committed credentials, or, in a public repo, no
+    profile's projects root, a repo nested inside another project's folder,
+    committed credentials, or, in a public repo, no
     license or a commit identity the user may not want published. Report
     documents that do not match the Documents rules in the conventions, and
     never rename, move, or convert them. Say which

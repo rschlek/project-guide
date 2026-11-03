@@ -2,10 +2,16 @@
 
 The rules a project follows. Machine-specific values (the projects root, scopes, hosts, tracker, memory system) live in the profile, never here.
 
+## Projects and items
+
+- A project is work with its own home: one repository, one tracker location, and one memory tag. Everything else is an item (a task, an errand, an idea), which has no home of its own.
+- A project's work runs in cycles. A cycle moves through the stages idea, shaped, reviewed, planned, building, done, and parked. The stages belong to a cycle, not to the project's life: done closes a cycle, and a project with no open cycle is maintained. A cycle's stage is held in the project's primary tracker, never in a document.
+- A live project, one running as a service, has an owner.
+
 ## Layout
 
-- All projects live under one projects root, flat at the top level. Each entry is one repo, or a parent repo with nested child repos.
-- A project gets a parent only when it needs two or more repos for a hard reason: a different host, a different visibility, or a separately deployable part. The parent ignores its children in `.gitignore`. Children are independent repos, not submodules.
+- All projects live under one projects root, flat at the top level: one project, one repository, never nested inside another. Every project gets a repository, whether or not it involves code.
+- A project may name a parent project in `project.yaml`. There is one level only: a parent never has a parent. A parent exists only when it has work of its own; projects that are only related are siblings joined by `links`. A parent and its children sit side by side in the projects root, each its own repo.
 
 ## Files every project carries
 
@@ -34,17 +40,35 @@ Optional:
 - `scope`: one of the profile's scopes, or `none`. Scope says whose the project is and where it is hosted, not who uses it; the summary says who it serves.
 - `visibility`: `internal` (anyone inside the organization that hosts the repo can read it) or `public` (anyone can read it), present only when the repo is not private; absent means private. It lets an agent without network access tell what may be written in this repo.
 - `shared`: `true` when other people work on this project, present only then. It is set when the user decides to share the project. A project whose `visibility` is `internal` or `public` counts as shared without it.
-- `repo_role` and `repos`: multi-repo projects only. `repo_role` is `parent` or this repo's role; `repos` maps role to remote URL.
-- `tracking`: map of tracker system to item reference.
-- `memory`: tag, state model, and instance, as applicable.
-- `links`: sources, outputs, docs, people.
+- `parent`: the slug of a parent project, when there is one (see Layout).
+- `tracking`: the project's trackers. `primary` holds the stage of each cycle, the decision map, and every ticket that is not code; optional `secondary` entries each hold one kind of ticket (`tickets`), such as code tickets. Each names its `kind` and the project's location in it (`ref`). A child may name its parent's tracker location as its own. A project that declares no tracker uses the profile's default.
+- `memory`: `tag`, `project:<slug>`; `system`, the kind of memory the project uses: `personal`, `shared`, or `repo`; and a state model, as applicable. Never the name of a bank, an instance, or a server: the profile maps each kind to the user's actual location.
+- `links`: related projects (`related`), the artifacts the project depends on (`depends_on`), sources, outputs, docs, people.
 - `parked` or `archived`: a dated decision (`since`) with a `reason`. Present only when deliberately set.
 
 The test for any field or file: if it can become false without anyone doing anything, it does not belong. Activity is read from git, never declared.
 
 One-way pointers: a manifest never lists a repo on a more private host than its own. A private repo may point at a more public one, never the reverse.
 
+A rare per-project override of a profile value lives in `project.local.yaml` beside `project.yaml`, ignored by git.
+
 Tracker mapping: a repo with a single outcome points at its smallest stable tracker item. A monorepo serving many outcomes points at the larger grouping item.
+
+## Trackers
+
+- Every ticket lives in exactly one tracker. Trackers are never mirrored into each other, and a ticket's status lives only in its tracker.
+- A tracker kind is valid when a recipe exists for it: a skill that says how to create, read, update, and close a ticket there. This standard names the field shape and that contract, never a product.
+
+## Dependencies
+
+- A project depends on an artifact, never on another project's folder. Each `links.depends_on` entry names the producer project (`project`), the artifact (`artifact`: a contract file such as a schema or an API document, a package, or a data product such as a view or an export format), and the pinned version (`version`).
+- When the consumer's readers may lack access to the producer, the contract is copied into the consumer at the pinned version. The producer's copy stays authoritative; this is the one standing exception to keeping no second copy (see "Code shared between projects").
+- A change to a contract yields a ticket in the producer and a ticket in the consumer to move its pin.
+
+## Memory
+
+- The profile, written by the standard's own skills, maps each memory kind to the user's actual memory location. When no profile is present, the agent treats the repository as the memory and keeps its notes under `docs/`, by the Documents rules.
+- Context for collaborators is published into the shared location, never granted through access to a personal one.
 
 ## Documents
 
@@ -53,8 +77,8 @@ Documents are written for someone who opens the project without the user's memor
 A project is shared when other people work on it or can read it: `project.yaml` says `shared: true`, or its `visibility` is `internal` or `public`.
 
 - In a shared project, the plan for a piece of work, the research behind it, and the decisions a reader needs are written into the project, not only held in memory. In a project that is the user's alone nothing is required, and an agent writes a plan or decision document only when asked. A plan that exists as a file lives in its project either way.
-- Plans: one file per piece of work, `docs/plan/<name>.md`, lowercase with hyphens. A plan says what will be done, in what order, and why. It opens with a title, then `Written:` with the date and `Task:` with the tracker item when there is one. It carries no progress: no checkboxes, no status line, no owner, no last-updated date. It is edited only when the plan itself changes.
-- When the work ends, the plan gets a `Closed:` line (finished or dropped, the date, one sentence on the outcome) and moves to `docs/plan/closed/` in the same change. What sits in `docs/plan/` itself is the list of open plans; no other list is kept.
+- Plans: one file per piece of work (one cycle), `docs/plan/<name>.md`, lowercase with hyphens. A plan says what will be done, in what order, and why. It opens with a title, then `Written:` with the date and `Task:` with the tracker item when there is one. It carries no progress: no checkboxes, no status line, no owner, no last-updated date. It is edited only when the plan itself changes.
+- When the work ends (its cycle reaches done, or is dropped), the plan gets a `Closed:` line (finished or dropped, the date, one sentence on the outcome) and moves to `docs/plan/closed/` in the same change. What sits in `docs/plan/` itself is the list of open plans; no other list is kept.
 - Decisions: one file, `docs/decisions.md`, newest first. Each entry has a date, what was decided, and why. A decision that changes gets a new entry that says what it replaces, and the old entry stays. Only decisions a reader needs to do or check the work go in.
 - A document that describes how something is (a how-to, an architecture page) changes in the same change as the thing it describes. One that nobody will keep true is deleted.
 - A document that records a moment (research, a test result, a brief, a handoff to another person) carries its date at the front of its file name, `YYYY-MM-DD-<name>.md`, and is not edited afterwards. New findings get a new file.
@@ -79,7 +103,7 @@ A project is shared when other people work on it or can read it: `project.yaml` 
 - One session per worktree.
 - A worktree's branch is pushed, or the worktree is not left overnight.
 - A worktree is removed when its branch merges.
-- Never run a doubled-force clean (`git clean -ffd` or similar) in a main checkout; it deletes nested worktrees and child repos.
+- Never run a doubled-force clean (`git clean -ffd` or similar) in a main checkout; it deletes nested worktrees and any ignored repo inside it.
 
 ## Code shared between projects
 
@@ -98,4 +122,4 @@ A project is shared when other people work on it or can read it: `project.yaml` 
 
 ## The profile
 
-One profile file per machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (kind and a URL pattern with `{key}`), and `memory` (kind and bank). See `references/profile.example.yaml` in the project-guide repository.
+One profile file per machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (the default tracker: kind and a URL pattern with `{key}`), and `memory` (for each memory kind, `personal`, `shared`, and `repo`, the user's actual location; `repo` needs none). See `references/profile.example.yaml` in the project-guide repository.

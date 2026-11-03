@@ -32,9 +32,11 @@ description: >-
 5. In `project.yaml`, set `project` to the name, and `title`, `summary`, and
    `scope`, plus `visibility: internal` or `visibility: public` for an
    internal or public project. For a private project, add `shared: true`
-   when other people work on it; otherwise leave that line out. Put the
-   title and the summary in
-   `README.md`.
+   when other people work on it; otherwise leave that line out. Set
+   `memory.tag` to `project:<name>` and `memory.system` to `shared` for a
+   shared project, `repo` when there is no profile, else `personal`. Leave
+   `tracking` empty unless the user names a tracker other than the profile's
+   default. Put the title and the summary in `README.md`.
 6. Fill the base block and write the conventions copy with Python 3.9 or
    later: `python ${CLAUDE_PLUGIN_ROOT}/scripts/sync.py --repo
    <projects_root>/<name> --add --worktrees-dir <worktrees_dir>`, with the
@@ -44,8 +46,8 @@ description: >-
 7. Check that no `<...>` placeholder remains in `README.md`, `project.yaml`,
    `AGENTS.md`, or the copy's first line (the rules themselves use `<...>`
    in examples).
-8. Initialize git on `main`. Add a `.gitignore` that ignores the profile's
-   worktrees folder.
+8. Initialize git on `main`. Add to the `.gitignore` copied from the
+   template a line that ignores the profile's worktrees folder.
 9. For a public project, first run the cleaning pass from the conventions:
    nothing identifying in the files, the commit identity the user wants
    published, and a license the user picks. For an internal project, check

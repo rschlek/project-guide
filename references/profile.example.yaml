@@ -25,10 +25,15 @@ scopes:
     host: code.example.org
     namespace: example-user
 
-tracker:
-  kind: example-tracker
+tracker:                           # the default tracker, for a project that declares none
+  kind: example-tracker            # a kind that has a recipe (a skill to create, read, update, close a ticket)
   url: https://tracker.example.com/browse/{key}
 
-memory:
-  kind: example-memory
-  bank: example-bank
+memory:                            # where each memory kind lives; project.yaml names only the kind
+  personal:
+    kind: example-memory
+    location: example-personal-store
+  shared:                          # where context for collaborators is published
+    kind: example-memory
+    location: example-shared-store
+  # repo needs no entry: the repository is the memory, notes under docs/

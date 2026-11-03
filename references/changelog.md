@@ -2,6 +2,17 @@
 
 Changes to the rules in `conventions.md`, newest first.
 
+## 2026-11-03
+
+User ruling 2026-11-03 (version 0.9.0):
+
+- Added "Projects and items": a project is work with its own home (one repository, one tracker location, one memory tag); everything else is an item with no home of its own. The stages idea, shaped, reviewed, planned, building, done, and parked belong to a cycle of work inside a project, not to the project's life; done closes a cycle, and a project with no open cycle is maintained. A cycle's stage is held in the primary tracker, never in a document. A live project has an owner. A plan covers one cycle.
+- Layout: one project, one repository, flat in the projects root, never nested. The multi-repo parent arrangement (`repo_role`, `repos`, child repos nested in the parent's folder and ignored there) is removed. `project.yaml` gains `parent`, one level only, used only when the parent has work of its own; related projects are siblings joined by `links`.
+- Added "Dependencies": a project depends on an artifact, never on another project's folder. `links.depends_on` names the producer project, the artifact, and the pinned version; the contract is copied into the consumer at that version when its readers may lack access to the producer; a contract change yields a ticket in the producer and a pin-bump ticket in the consumer.
+- Added "Trackers": `tracking` declares a `primary` tracker (stage, decision map, every non-code ticket) and optional secondaries, each for one ticket kind, by kind and location. Every ticket lives in exactly one tracker, trackers are never mirrored, and a ticket's status lives only in its tracker. A kind is valid when a recipe (a skill to create, read, update, and close a ticket) exists for it. A project that declares none uses the profile's default, and a child may use its parent's.
+- Added "Memory": `memory` holds `tag` (`project:<slug>`) and `system` (`personal`, `shared`, or `repo`), and never a bank, instance, or server name; `instance` is removed. The profile maps each kind to the user's actual location. With no profile, the repository is the memory. Context for collaborators is published into the shared location. A rare per-project override lives in a git-ignored `project.local.yaml`, which the template ignores.
+- The base block says a ticket's status lives only in its tracker and tickets are never copied between trackers.
+
 ## 2026-10-03
 
 - The project's `memory` field holds the tag, state model, and instance, and no longer the bank: a memory bank belongs to a person, not to a project, so which bank a project's memory goes to comes from the profile's `memory` section (version 0.7.1).
