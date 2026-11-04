@@ -1,7 +1,7 @@
 project: <slug>        # required; equals the repo name
 title:                 # human-readable name
 summary: "<one sentence: what it is and who it is for>"   # required
-owner:                 # the person responsible, by name or handle; required for a live project
+owner:                 # host plus handle, e.g. github.com/your-handle; never a display name; required for a live project
 scope:                 # from the profile's scope list, or none once decided
 tracking:              # absent: the profile's default tracker
 #   primary:             # stage of each cycle, decision map, every non-code ticket

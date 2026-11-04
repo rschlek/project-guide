@@ -40,7 +40,7 @@ Required:
 
 Optional:
 - `title`: a human-readable name.
-- `owner`: the person responsible for the project, by name or handle. Required for a live project (one running as a service), optional otherwise.
+- `owner`: the person responsible for the project, as their handle on the hosting instance the repository lives on, written as host plus handle (for example `github.com/<handle>`, or a work instance's host plus handle); never a display name. Required for a live project (one running as a service), optional otherwise.
 - `scope`: one of the profile's scopes, or `none`. Scope says whose the project is and where it is hosted, not who uses it; the summary says who it serves.
 - `visibility`: `internal` (anyone inside the organization that hosts the repo can read it) or `public` (anyone can read it), present only when the repo is not private; absent means private. It lets an agent without network access tell what may be written in this repo.
 - `shared`: `true` when other people work on this project, present only then. It is set when the user decides to share the project. A project whose `visibility` is `internal` or `public` counts as shared without it.
@@ -100,7 +100,7 @@ A project is shared when other people work on it or can read it: `project.yaml` 
 - Existing shared repos are not renamed just to conform.
 - A project has a remote from creation, private unless the user decides it is internal or public. The profile maps each scope to a host and namespace.
 - An internal repo may name the organization that hosts it, its teams, and its internal systems, but never holds other people's personal details, credentials, or data extracts.
-- Before the first public push there is a cleaning pass: no person names, usernames, employer or team names, internal product names, hostnames, memory bank names, or machine paths in files or in history; the commit identity is the one the user wants published; and the repo has a license.
+- Before the first public push there is a cleaning pass: no person names, usernames, employer or team names, internal product names, hostnames, memory bank names, or machine paths in files or in history (a hosting handle in `owner` is allowed, since the host already shows it); the commit identity is the one the user wants published; and the repo has a license.
 
 ## Worktrees
 

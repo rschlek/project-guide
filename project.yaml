@@ -1,11 +1,11 @@
 project: project-guide
 title: Project Guide
 summary: A generic standard and plugin for laying out, naming, and describing projects, for anyone who keeps many repos and works with agents.
-owner:
+owner: github.com/rschlek
 scope: personal
 tracking:
 memory:
   tag: project:project-guide
-  system:
+  system: personal
 links:
 visibility: public
