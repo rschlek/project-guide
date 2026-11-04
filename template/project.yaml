@@ -1,6 +1,7 @@
 project: <slug>        # required; equals the repo name
 title:                 # human-readable name
 summary: "<one sentence: what it is and who it is for>"   # required
+owner:                 # the person responsible, by name or handle; required for a live project
 scope:                 # from the profile's scope list, or none once decided
 tracking:              # absent: the profile's default tracker
 #   primary:             # stage of each cycle, decision map, every non-code ticket
@@ -14,14 +15,16 @@ memory:
   tag: project:<slug>
   system:              # personal, shared, or repo; never a bank, instance, or server name
 #  state_model:         # as applicable
-links:                 # related, depends_on, sources, outputs, docs, people
+links:                 # related, depends_on, agents, sources, outputs, docs, people
 #   related:             # slugs of related projects
 #   depends_on:          # one entry per artifact this project depends on
 #     - project:         # the producer project's slug
+#       repo:            # the producer's repository URL
 #       artifact:        # contract file, package, or data product
 #       version:         # the pinned version
+#   agents:              # URL of the repository holding the agents that tend this project
 # visibility:          # only when not private: internal or public (absent means private)
 # shared:              # only when other people work on the project: true
 # parent:              # only when there is a parent project: its slug (one level only)
-# parked:              # only when deliberately parked: since (date) and reason
-# archived:            # same shape as parked
+# paused:              # only when deliberately paused: since (date) and reason
+# archived:            # same shape as paused

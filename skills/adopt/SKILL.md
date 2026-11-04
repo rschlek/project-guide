@@ -18,8 +18,8 @@ description: >-
 2. Locate the profile: the path in the environment variable
    `PROJECT_GUIDE_PROFILE` when it is set and the file exists; else the path
    written in the one-line file `.project-guide` in the user's home folder. If
-   neither exists, ask the user where the projects root is and offer to create
-   a profile from `${CLAUDE_PLUGIN_ROOT}/references/profile.example.yaml`.
+   neither exists, run the profile skill (`project-guide:profile`) to create
+   one, then continue with it.
 3. Look at the repo: folder name, the `origin` remote, README, existing agent
    files, `.gitignore`, and any existing `project.yaml`. The tree is clean
    when no tracked file is modified or staged; untracked files do not block.
@@ -61,12 +61,13 @@ description: >-
    as `visibility: internal` or `public`. Unless `visibility` is `internal`
    or `public`, which already counts as shared, or someone else owns the
    repo, ask once whether other people work on the project and on a yes set
-   `shared: true`. Set `memory.tag` to `project:<project>`; set
+   `shared: true`. For a project that runs as a service, ask for `owner`.
+   Set `memory.tag` to `project:<project>`; set
    `memory.system` only when the user confirms the kind (`personal`,
    `shared`, or `repo`). Leave unknown fields empty. If `project.yaml`
    exists, fill only its empty fields and propose changes; propose replacing
-   `repo_role` and `repos` with `parent` and `links`, and removing any bank,
-   instance, or server name from `memory`.
+   `repo_role` and `repos` with `parent` and `links`, renaming `parked` to
+   `paused`, and removing any bank, instance, or server name from `memory`.
 8. If the profile's worktrees folder or `project.local.yaml` is not
    ignored, add the ignore line: in `.gitignore` in the user's own repo, in the local exclude file in a
    shared repo. In a repo someone else owns, also list the added standard

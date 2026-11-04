@@ -19,22 +19,23 @@ description: >-
 2. Locate the profile: the path in the environment variable
    `PROJECT_GUIDE_PROFILE` when it is set and the file exists; else the path
    written in the one-line file `.project-guide` in the user's home folder. If
-   neither exists, ask the user where the projects root is and offer to create
-   a profile from `${CLAUDE_PLUGIN_ROOT}/references/profile.example.yaml`.
+   neither exists, run the profile skill (`project-guide:profile`) to create
+   one, then continue with it.
 3. Ask for the scope (from the profile's list), the subject, a human-readable
    title, a one-sentence summary saying what it is and who it is for, and
    whether it is private, internal, or public (private unless the user
    decides otherwise). Unless the user chose internal or public, which
    already counts as shared, ask once whether other people work on the
-   project. Build the name per the naming rule. Stop if a folder of that name
+   project. For a project that will run as a service, ask for its owner. Build the name per the naming rule. Stop if a folder of that name
    already exists under the projects root.
 4. Copy `${CLAUDE_PLUGIN_ROOT}/template` to `<projects_root>/<name>`.
 5. In `project.yaml`, set `project` to the name, and `title`, `summary`, and
-   `scope`, plus `visibility: internal` or `visibility: public` for an
+   `scope`, `owner` when the user named one, plus `visibility: internal` or `visibility: public` for an
    internal or public project. For a private project, add `shared: true`
    when other people work on it; otherwise leave that line out. Set
    `memory.tag` to `project:<name>` and `memory.system` to `shared` for a
-   shared project, `repo` when there is no profile, else `personal`. Leave
+   shared project, else `personal`, or `repo` when the user keeps no memory
+   for it. Leave
    `tracking` empty unless the user names a tracker other than the profile's
    default. Put the title and the summary in `README.md`.
 6. Fill the base block and write the conventions copy with Python 3.9 or

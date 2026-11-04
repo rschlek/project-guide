@@ -593,20 +593,14 @@ def own_flow(full, std, a):
     return row
 
 
-def discover(root, worktrees_dir):
-    skip_top = worktrees_dir.replace("\\", "/").strip("/").split("/")[0]
+def discover(root):
+    """The repositories directly under the projects root; the layout is flat."""
     found = []
     for entry in sorted(os.listdir(root), key=str.lower):
         full = os.path.join(root, entry)
         if not os.path.isdir(os.path.join(full, ".git")):
             continue  # not a repository, or a linked worktree (its .git is a file)
         found.append((entry, full))
-        for child in sorted(os.listdir(full), key=str.lower):
-            cfull = os.path.join(full, child)
-            if child in (".git", skip_top) or not os.path.isdir(os.path.join(cfull, ".git")):
-                continue
-            if is_ignored(full, child + "/"):
-                found.append((entry + "/" + child, cfull))
     return found
 
 
@@ -649,7 +643,7 @@ def main(argv=None):
     else:
         only, skip = names(a.only), names(a.skip)
         targets = []
-        for name, full in discover(os.path.abspath(a.root), a.worktrees_dir):
+        for name, full in discover(os.path.abspath(a.root)):
             if only and name not in only and os.path.basename(full) not in only:
                 continue
             if name in skip or os.path.basename(full) in skip:

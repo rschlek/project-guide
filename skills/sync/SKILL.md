@@ -21,7 +21,8 @@ description: >-
 1. Locate the profile: the path in the environment variable
    `PROJECT_GUIDE_PROFILE` when it is set and the file exists; else the path
    written in the one-line file `.project-guide` in the user's home folder. If
-   neither exists, ask the user where the projects root is. Read its
+   neither exists, run the profile skill (`project-guide:profile`) to create
+   one, then continue with it. Read its
    `projects_root`, `worktrees_dir` (default `.claude/worktrees`), and the
    optional `shared_namespaces` list.
 2. Plan, which only reads, with Python 3.9 or later:
@@ -64,8 +65,10 @@ description: >-
   `project.yaml` is local only (a repo someone else owns) gets a local copy;
   one with no `project.yaml`, or one not committed yet, is left to adopt
   unless it already carries a block or a copy. A project whose
-  `project.yaml` says `archived` is always skipped; a parked one is not.
-  The standard's own repository is skipped.
+  `project.yaml` says `archived` is always skipped; a paused one is not.
+  The standard's own repository is skipped. The layout is flat: only repos
+  directly under the projects root are covered, and a repo nested inside
+  another project's folder is not (adopt reports it).
 - Sync never sets `visibility` or any other `project.yaml` field, and never
   moves, renames, or deletes anything.
 - The script writes `AGENTS.md` (the block only, or a new file from the

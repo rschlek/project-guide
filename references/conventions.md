@@ -5,8 +5,11 @@ The rules a project follows. Machine-specific values (the projects root, scopes,
 ## Projects and items
 
 - A project is work with its own home: one repository, one tracker location, and one memory tag. Everything else is an item (a task, an errand, an idea), which has no home of its own.
-- A project's work runs in cycles. A cycle moves through the stages idea, shaped, reviewed, planned, building, done, and parked. The stages belong to a cycle, not to the project's life: done closes a cycle, and a project with no open cycle is maintained. A cycle's stage is held in the project's primary tracker, never in a document.
-- A live project, one running as a service, has an owner.
+- A project's work runs in cycles. A cycle moves through the stages idea, shaped, reviewed, planned, building, done, and paused. The stages belong to a cycle, not to the project's life: done closes a cycle, and a project with no open cycle is maintained. A cycle's stage is held in the project's primary tracker, never in a document.
+- The reviewed stage produces the cycle's decision map: the list of the cycle's open decisions, each with its options. Each open decision is a ticket in the primary tracker; when it is answered, the answer and its why go in `docs/decisions.md` and the ticket closes. The standard adopts the wayfinder, to-spec, and to-tickets flow of Matt Pocock's skills, adapted for work that is not software; those skills are the recommended tools, not a requirement.
+- Paused work is a state on its item in the tracker; a paused project is `paused: {since, reason}` in `project.yaml`, present only when deliberately set.
+- A live project, one running as a service, has an owner, named in `project.yaml`.
+- Agent logic (the definitions, prompts, and skills of the agents that tend a project) never lives in the project's repository. A project tended by agents links the repository that holds them as `links.agents`.
 
 ## Layout
 
@@ -37,18 +40,19 @@ Required:
 
 Optional:
 - `title`: a human-readable name.
+- `owner`: the person responsible for the project, by name or handle. Required for a live project (one running as a service), optional otherwise.
 - `scope`: one of the profile's scopes, or `none`. Scope says whose the project is and where it is hosted, not who uses it; the summary says who it serves.
 - `visibility`: `internal` (anyone inside the organization that hosts the repo can read it) or `public` (anyone can read it), present only when the repo is not private; absent means private. It lets an agent without network access tell what may be written in this repo.
 - `shared`: `true` when other people work on this project, present only then. It is set when the user decides to share the project. A project whose `visibility` is `internal` or `public` counts as shared without it.
 - `parent`: the slug of a parent project, when there is one (see Layout).
-- `tracking`: the project's trackers. `primary` holds the stage of each cycle, the decision map, and every ticket that is not code; optional `secondary` entries each hold one kind of ticket (`tickets`), such as code tickets. Each names its `kind` and the project's location in it (`ref`). A child may name its parent's tracker location as its own. A project that declares no tracker uses the profile's default.
-- `memory`: `tag`, `project:<slug>`; `system`, the kind of memory the project uses: `personal`, `shared`, or `repo`; and a state model, as applicable. Never the name of a bank, an instance, or a server: the profile maps each kind to the user's actual location.
-- `links`: related projects (`related`), the artifacts the project depends on (`depends_on`), sources, outputs, docs, people.
-- `parked` or `archived`: a dated decision (`since`) with a `reason`. Present only when deliberately set.
+- `tracking`: the project's trackers. `primary` holds the stage of each cycle, the decision map (one ticket per open decision), and every ticket that is not code; optional `secondary` entries each hold one kind of ticket (`tickets`), such as code tickets. Each names its `kind` and the project's location in it (`ref`). A child may name its parent's tracker location as its own. A project that declares no tracker uses the profile's default.
+- `memory`: `tag`, `project:<slug>`; `system`, the one kind of memory the project uses: `personal`, `shared`, or `repo`; and a state model, as applicable. Never the name of a bank, an instance, or a server: the profile maps each kind to the user's actual location.
+- `links`: related projects (`related`), the artifacts the project depends on (`depends_on`), the repository holding the agents that tend the project (`agents`), sources, outputs, docs, people.
+- `paused` or `archived`: a dated decision (`since`) with a `reason`. Present only when deliberately set.
 
 The test for any field or file: if it can become false without anyone doing anything, it does not belong. Activity is read from git, never declared.
 
-One-way pointers: a manifest never lists a repo on a more private host than its own. A private repo may point at a more public one, never the reverse.
+One-way pointers apply to memory only: a repository never names a memory location more private than itself, and `memory` names only a kind. A manifest may link a more private repository: a link grants no access, and it tells a reader without access what to ask for. What a repository may contain still follows its visibility.
 
 A rare per-project override of a profile value lives in `project.local.yaml` beside `project.yaml`, ignored by git.
 
@@ -61,14 +65,16 @@ Tracker mapping: a repo with a single outcome points at its smallest stable trac
 
 ## Dependencies
 
-- A project depends on an artifact, never on another project's folder. Each `links.depends_on` entry names the producer project (`project`), the artifact (`artifact`: a contract file such as a schema or an API document, a package, or a data product such as a view or an export format), and the pinned version (`version`).
+- A project depends on an artifact, never on another project's folder. Each `links.depends_on` entry names the producer project (`project`), the producer's repository URL (`repo`), the artifact (`artifact`: a contract file such as a schema or an API document, a package, or a data product such as a view or an export format), and the pinned version (`version`). The repository link lets a reader without access know what to ask for.
 - When the consumer's readers may lack access to the producer, the contract is copied into the consumer at the pinned version. The producer's copy stays authoritative; this is the one standing exception to keeping no second copy (see "Code shared between projects").
 - A change to a contract yields a ticket in the producer and a ticket in the consumer to move its pin.
 
 ## Memory
 
-- The profile, written by the standard's own skills, maps each memory kind to the user's actual memory location. When no profile is present, the agent treats the repository as the memory and keeps its notes under `docs/`, by the Documents rules.
-- Context for collaborators is published into the shared location, never granted through access to a personal one.
+- The repository is the record a stranger needs to do the work. Memory is the working knowledge: preferences and rulings across projects, operational facts about running systems, dead ends, and where a session left off.
+- The profile, written by the standard's own skills, maps each memory kind to the user's actual memory location. When no profile is present, or the project's memory is not reachable by the person working, an agent writes only what the Documents rules already allow: decisions in `docs/decisions.md`, plans in `docs/plan/`, and documents someone asked for, such as research or specs, under `docs/`. Scratch notes, session handoffs, and unrequested notes never enter a repository.
+- A project uses one memory kind: `personal`, `shared`, or `repo`. A project with collaborators declares `shared`. A person's own observations go to their personal memory and are never declared in the repository.
+- Context for collaborators is published into the shared location, never granted through access to a personal one. A collaborator's decision reaches the project in a pull request, as an entry in `docs/decisions.md`.
 
 ## Documents
 
@@ -112,7 +118,7 @@ A project is shared when other people work on it or can read it: `project.yaml` 
   1. A link in `project.yaml`, when the project only needs to know where the code is.
   2. When the project needs the files to build or run and is a monorepo by design, the code lives in the monorepo and the owning project links to it.
   3. Otherwise a reference pinned to a commit or tag: a git submodule where the repo uses no worktrees, a pinned entry in the project's own catalog where it does.
-- A reference never points at a more private repo (private, then internal, then public), and never at a branch, with one exception: a repo published as a plugin publishes on a `stable` branch, which moves only by deliberate promotion from `main`, never as a side effect, and a catalog may follow `stable`. Every other reference stays pinned to a commit or tag.
+- A reference that fetches code never points at a more private repo (private, then internal, then public), and never at a branch, with one exception: a repo published as a plugin publishes on a `stable` branch, which moves only by deliberate promotion from `main`, never as a side effect, and a catalog may follow `stable`. Every other reference stays pinned to a commit or tag.
 - A deliberate temporary copy, such as a shadow migration, records the commit it was taken from and which copy is authoritative.
 
 ## Repos shared with other people
@@ -122,4 +128,4 @@ A project is shared when other people work on it or can read it: `project.yaml` 
 
 ## The profile
 
-One profile file per machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (the default tracker: kind and a URL pattern with `{key}`), and `memory` (for each memory kind, `personal`, `shared`, and `repo`, the user's actual location; `repo` needs none). See `references/profile.example.yaml` in the project-guide repository.
+One profile file per user on each machine holds the values these rules refer to: `projects_root`, `worktrees_dir`, `scopes` (each with its meaning, whether it is a name prefix, and its remote host and namespace), `tracker` (the default tracker: kind and a URL pattern with `{key}`), and `memory` (for each memory kind, `personal`, `shared`, and `repo`, the user's actual location; `repo` needs none). The profile skill creates, shows, and changes it. See `references/profile.example.yaml` in the project-guide repository.
